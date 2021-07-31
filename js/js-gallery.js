@@ -1,15 +1,15 @@
 import galleryItems from './app.js';
 
 const galleryRef = document.querySelector('.js-gallery');
-const lightboxRef = document.querySelector('.js-lightbox');
-const lightboxImagRef = document.querySelector('.lightbox__image');
-const btnClsRef = document.querySelector('[data-action="close-lightbox"]');
+const modalRef = document.querySelector('.js-lightbox');
+const imgModalRef = document.querySelector('.lightbox__image');
+const btnCloseModal = document.querySelector('[data-action="close-lightbox"]');
 const overlayRef = document.querySelector('.lightbox__overlay');
 
-const imgSetMarkup = createGalleryMarkup(galleryItems);
+const galleryMarkup = createGalleryMarkup(galleryItems);
 
 function createGalleryMarkup(images) {
-  return images.map(({preview, original, description}) => {
+  return images.map(({ preview, original, description }) => {
     return `<li class="gallery__item">
   <a
     class="gallery__link"
@@ -22,63 +22,66 @@ function createGalleryMarkup(images) {
       alt="${description}"
     />
   </a>
-</li>`;
+</li>`
   }).join('');
 };
 
-galleryRef.insertAdjacentHTML('beforeend', imgSetMarkup);
+galleryRef.insertAdjacentHTML('beforeend', galleryMarkup);
 
-galleryRef.addEventListener('click', onGalleryClick);
-
-function onGalleryClick(e) {
+galleryRef.addEventListener('click', onOpenClickModal);
+function onOpenClickModal(e) {
   e.preventDefault();
-  if (!e.target.classList.contains('gallery__image')) {
-    return; 
-  };
-
-  lightboxRef.classList.add('is-open');
-  lightboxImagRef.src = e.target.dataset.source;
-  // lightboxImagRef.alt = e.target.alt;
-
-  document.body.style.cssText = `height: 100%; width: 100%; position: fixed; overflow: hidden;`
-
-  window.addEventListener('keydown', OnClsModalPressEsc);
-  window.addEventListener('keyup', onPressKeyArrow);
-};
-
-btnClsRef.addEventListener('click', onClsModalBtn);
-
-function onClsModalBtn() {
-  lightboxRef.classList.remove('is-open');
-  lightboxImagRef.src = '';
   
-  document.body.style.cssText -= `height: 100%; width: 100%; position: fixed; overflow: hidden;`
+  // if (!e.target.classList.contains('gallery__image')) {
+    //   return;
+    // };
+    if (e.target.nodeName !== 'IMG') {
+      return;
+    };
+  
+  modalRef.classList.add('is-open');
+  imgModalRef.src = e.target.dataset.source;
+  imgModalRef.alt = e.target.alt;
 
-  window.removeEventListener('keydown', OnClsModalPressEsc);
-  window.removeEventListener('keyup', onPressKeyArrow)
+  document.body.style.cssText += `height:100%; width:100%; overflow:hidden; position:fixed;`
+
+  window.addEventListener('keydown', onCloseModalPressEsc);
+  window.addEventListener('keydown', onCloseModalPressArrow);
+
+};
+  
+function onCloseModalPressEsc(e) {
+  const PRESS_KEY_ESCAPE = 'Escape';
+  if (e.code === PRESS_KEY_ESCAPE) {
+    onCloseClickModal();
+  };
 };
 
-overlayRef.addEventListener('click', OnClsModalPressKey);
+  btnCloseModal.addEventListener('click', onCloseClickModal);
+  function onCloseClickModal() {
+    modalRef.classList.remove('is-open');
+    imgModalRef.src = '';
+    imgModalRef.alt = '';
 
-function OnClsModalPressKey(e) {
+    document.body.style.cssText -= `height:100%; width:100%; overflow:hidden; position:fixed;`
+
+    window.removeEventListener('keydown', onCloseModalPressEsc);
+    window.removeEventListener('keydown', onCloseModalPressArrow);
+};
+  
+overlayRef.addEventListener('click', onCloseClickOverlay);
+function onCloseClickOverlay(e) {
   if (e.target === e.currentTarget) {
-    onClsModalBtn()
+    onCloseClickModal();
   };
 };
 
-function OnClsModalPressEsc(e) {
-  if (e.code === 'Escape') {
-    onClsModalBtn()
-  };
-};
-
-const arrImg = galleryItems.map(el => el.original);
-
-function onPressKeyArrow(e) {
-  const currentImgIdx = arrImg.indexOf(lightboxImagRef.src);
+const arrayImg = galleryItems.map(image => image.original);
+function onCloseModalPressArrow(e) {
+  const currentImgIdx = arrayImg.indexOf(imgModalRef.src);  
   if (e.code === 'ArrowRight' && currentImgIdx < galleryItems.length - 1) {
-    lightboxImagRef.src = galleryItems[currentImgIdx + 1].original;
+    imgModalRef.src = galleryItems[currentImgIdx + 1].original;
   } else if (e.code === 'ArrowLeft' && currentImgIdx > 0) {
-    lightboxImagRef.src = galleryItems[currentImgIdx - 1].original;
+    imgModalRef.src = galleryItems[currentImgIdx - 1].original;
   };
 };
